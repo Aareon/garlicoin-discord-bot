@@ -18,6 +18,10 @@ Update `$discordBotName` and `$discordNewBlockMessage` as you see fit.
 
 STEP 3
 
+Make sure the file lastConfirmedBlockCount.txt can be written and read by the PHP user/group permissions.
+
+STEP 4
+
 Run the php file using cron or a similar regular function. We need to setup the file to long-poll the API.
 
 *********************************************
