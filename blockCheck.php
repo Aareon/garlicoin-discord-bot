@@ -1,54 +1,54 @@
 <?php
 
-require_once("DiscordClient.class.php");
+require_once(__DIR__ . "/DiscordClient.class.php");
+include(__DIR__ . "/config.php");
 
-/*
- * This file saves the latest confirmed block count in a txt file and checks a mining pool JSON API for updates
- * If there is an update it alerts Discord by messaging a channel (defined by the webhook) 
- *
- * @param string $jsonMiningApi The URL of the mining pools JSON API
- * @param string $lastConfirmedBlockCountFilePath The filepath of the writeable txt file used to save the latest confirmed blocks
- * @param string $discordWebhook The url of the webhook made in Discord
- * @param string $discordBotName The username that appears in the channel when a message is made
- * @param string $discordNewBlockMessage What you want the discord bot message to display
- *
- */
-
-$jsonMiningApi = ''; //E.g. http://hry-mining.co/api/stats
-$lastConfirmedBlockCountFilePath = __DIR__ . '/lastConfirmedBlockCount.txt';
-$discordWebhook = '';
-$discordBotName = 'Nascowe';
-$discordNewBlockMessage = 'New Block Confirmed!';
-
+//Get the JSON output from the pool server
 $ch = curl_init($jsonMiningApi);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $jsonApiText = curl_exec($ch);
 $jsonApiObj = json_decode($jsonApiText);
 
-//get the confirmed block count from the Api Object
+//get the pending and confirmed block count from the JSON Api Object
+$currentPendingBlocks = (int) $jsonApiObj->pools->garlicoin->blocks->pending;
 $currentConfirmedBlocks = (int) $jsonApiObj->pools->garlicoin->blocks->confirmed;
 
-//get the previous confirmed block count
-$lastConfirmedBlockCountFile = fopen($lastConfirmedBlockCountFilePath, "r") or die("Unable to open file!");
-$lastConfirmedBlockCount = (int) fgets($lastConfirmedBlockCountFile);
-fclose($lastConfirmedBlockCountFile);
+//get the previous confirmed block count and check it is legit by exploding it into two integers
+$lastBlockCountFile = fopen($lastBlockCountFilePath, "r") or die("Unable to open file!");
+$fileContentsString = fgets($lastBlockCountFile);
+fclose($lastBlockCountFile);
+$explodedString = explode("::", $fileContentsString);
 
-if (!is_integer($lastConfirmedBlockCount)) {
-    $lastConfirmedBlockCountFile = fopen($lastConfirmedBlockCountFilePath, "w") or die("Unable to open file!");
-    fwrite($lastConfirmedBlockCountFile, $currentConfirmedBlocks);
-    fclose($lastConfirmedBlockCountFile);
+if (count($explodedString) != 2) {
+    //This is unexpected. There should be two integers in the array. 
+    //Start afresh by overwriting lastBlockCount.txt with the current info.
+    $lastBlockCountFile = fopen($lastBlockCountFilePath, "w") or die("Unable to open file!");
+    fwrite($lastBlockCountFile, $currentPendingBlocks . '::' . $currentConfirmedBlocks);
+    fclose($lastBlockCountFile);
+    
+    $lastPendingBlockCount = $currentPendingBlocks;
     $lastConfirmedBlockCount = $currentConfirmedBlocks;
+} else {
+    $lastPendingBlockCount = (int) $explodedString[0];
+    $lastConfirmedBlockCount = (int) $explodedString[1];
 }
 
-if ($currentConfirmedBlocks > $lastConfirmedBlockCount) {
-    //there is a new confirmed block. Alert Discord
-    $discord = new DiscordClient();
-    $discord->name($discordBotName);
-    $discord->send($discordNewBlockMessage);
-    
-    //Update lastConfirmedBlockCount.txt with the current confirmed block count
+if ($currentConfirmedBlocks > $lastConfirmedBlockCount || $currentPendingBlocks > $lastPendingBlockCount) {
+    //there is a new pending or confirmed block. Alert Discord appropriately
+    if ($currentPendingBlocks > $lastPendingBlockCount) {
+        $discord = new DiscordClient($discordWebhook);
+        $discord->name($discordBotName);
+        $discord->send($discordNewPendingBlockMessage);
+    }
+    if ($currentConfirmedBlocks > $lastConfirmedBlockCount) {
+        $discord = new DiscordClient($discordWebhook);
+        $discord->name($discordBotName);
+        $discord->send($discordNewConfirmedBlockMessage);
+    }
+        
+    //Update lastBlockCount.txt with the current block counts
     $lastConfirmedBlockCountFile = fopen($lastConfirmedBlockCountFilePath, "w") or die("Unable to open file!");
-    fwrite($lastConfirmedBlockCountFile, $currentConfirmedBlocks);
-    fclose($lastConfirmedBlockCountFile);
+    fwrite($lastBlockCountFile, $currentPendingBlocks . '::' . $currentConfirmedBlocks);
+    fclose($lastBlockCountFile);
 }
 ?>
