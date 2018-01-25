@@ -12,34 +12,25 @@ Setup a discord webhook for the channel you want the bot to message into.
 
 STEP 2
 
-Save the webhook link in Step 1 into the variable string on line 19 in block-check.php (`$discordWebhook = '{{YOUR DISCORD WEBHOOK}}';`).
-Put the JSON API URL into the variable string on line 17 (`$jsonMiningApi = '{{YOUR JSON API URL}}';`).
-Update `$discordBotName` and `$discordNewBlockMessage` as you see fit.
+Save the webhook link in Step 1 into the variable string on line 16 in config.php (`$discordWebhook = '{{YOUR DISCORD WEBHOOK}}';`).
+
+Put the Mining Pools JSON API URL into the variable string on line 14 (`$jsonMiningApi = '{{YOUR JSON API URL}}';`).
+
+Update `$discordBotName`, `$discordNewPendingBlockMessage` and `$discordNewConfirmedBlockMessage` as you see fit.
 
 STEP 3
 
-Make sure the file lastConfirmedBlockCount.txt can be written and read by the PHP user/group permissions.
+Make sure the file lastBlockCount.txt can be written and read by the PHP user/group permissions.
 
 STEP 4
 
-Run the php file using cron or a similar regular function. We need to setup the file to long-poll the API.
+Update the shell script `garlicoin-block-check.sh` to have the correct filepath to batch-check.php and to PHP if needed (should work on most linux distro's).
 
-*********************************************
-*******FREEBSD Crontab Instructions**********
-*********************************************
-Use the command `ee /etc/crontab` to open up cron.
+FreeBSD will need line 5 to be `/usr/local/bin/php -q /usr/home/nathan/pims/public/garlicoin/block-check.php`
+
+STEP 5
+
+Run the shell script every minute using cron.
 
 Add the following line (make sure to update the filepath to block-check.php):
-`*       *       *       *       *       /usr/local/bin/php -q {{file path}}/block-check.php`
-
-Press escape to bring up the menu and exit (make sure to save changes).
-
-Use the command `/etc/rc.d/cron restart` to restart cron.
-
-The file will now run a check every minute.
-
-*********************************************
-************Other Nix Distros****************
-*********************************************
-
-Other Linux Distro's just need to ensure the pathway to PHP is correct. Generally this just means putting in `php` instead of `/usr/local/bin/php` in the above cron. Sometimes you might need to put in the full path though (usually /usr/local/php).
+`*       *       *       *       *       {{file/path}}/garlicin-block-check.sh
