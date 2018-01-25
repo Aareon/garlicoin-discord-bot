@@ -47,7 +47,7 @@ if ($currentConfirmedBlocks > $lastConfirmedBlockCount || $currentPendingBlocks 
     }
         
     //Update lastBlockCount.txt with the current block counts
-    $lastConfirmedBlockCountFile = fopen($lastConfirmedBlockCountFilePath, "w") or die("Unable to open file!");
+    $lastBlockCountFile = fopen($lastBlockCountFilePath, "w") or die("Unable to open file!");
     fwrite($lastBlockCountFile, $currentPendingBlocks . '::' . $currentConfirmedBlocks);
     fclose($lastBlockCountFile);
 }
