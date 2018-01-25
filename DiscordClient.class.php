@@ -6,8 +6,7 @@
  * $discord = new DiscordClient('URL-FROM-DISCORD-GOES-HERE');
  * $discord->name('Optional'); // If not set, uses the name set in Discord
  * $discord->avatar('Optional'); // If not set, uses the avatar set in Discord
- * $discord->message('Here is where the message can optionally go.'); // If not set, uses the message provided in $this->send()
- * $discord->send('Here is where the message can optionally go.');]
+ * $discord->send('Here is where the message can optionally go.');
  * 
  * This is a very slightly modified version of this repo file: https://gist.github.com/AuroraAri/ae919a18eab4325149a721a654ca2a33
  */
@@ -60,15 +59,6 @@ class DiscordClient
     }
     
     /* 
-     * (Optional) Set the message to be sent; can also be set in $this->send()
-     * @param string $name The name that should be shown as the user sending the message
-     */
-     
-    public function message($message) {
-        $this->message = $message;
-    }
-    
-    /* 
      * (Optional) Set the avatar of the user sending the message; if not set, uses the avatar set in Discord
      * @param string $avatar The URL of the image to be used as the avatar for the user sending the message
      */
@@ -83,10 +73,6 @@ class DiscordClient
      */
     
     public function send($message) {
-        if ($this->message != '') {
-            $message = $this->message;
-        }
-        
         $url = $this->url;
         
         $data = array(
